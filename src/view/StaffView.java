@@ -6,6 +6,8 @@ import model.StaffMember;
 import model.Volunteer;
 
 import org.nocrala.tools.texttablefmt.BorderStyle;
+import org.nocrala.tools.texttablefmt.CellStyle;
+import org.nocrala.tools.texttablefmt.CellStyle.HorizontalAlign;
 import org.nocrala.tools.texttablefmt.Table;
 
 import java.util.List;
@@ -18,20 +20,31 @@ public class StaffView {
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RED   = "\u001B[31m";
+    public static final String ANSI_CYAN  = "\u001B[36m";
 
     public void printMainMenu() {
-        Table t = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-        t.addCell(ANSI_GREEN + " Welcome to Staff Management System " + ANSI_RESET);
-        t.addCell("\n 1.Insert Employee\n\n 2.Display Employee\n\n 3.Update Employee\n\n 4.Remove Employee\n\n 5.Exit system\n");
+        Table t = new Table(1, BorderStyle.UNICODE_BOX);
+        CellStyle centerStyle = new CellStyle(HorizontalAlign.CENTER);
+        t.addCell(ANSI_CYAN + " Welcome to Staff Management System " + ANSI_RESET, centerStyle);
+        t.addCell(" ");
+        t.addCell("        1.Insert Employee");
+        t.addCell("        2.Display Employee");
+        t.addCell("        3.Update Employee");
+        t.addCell("        4.Remove Employee");
+        t.addCell("        5.Exit system");
+        t.addCell(" ");
         System.out.println(t.render());
     }
 
     public void printInsertTypeMenu() {
+        System.out.println("========* Insert Employee *========");
+        System.out.println("\nChoose Type:");
         Table t = new Table(4, BorderStyle.UNICODE_BOX);
-        t.addCell(" 1. Volunteer ");
-        t.addCell(" 2. Salaries Employee ");
-        t.addCell(" 3.Hourly Employee ");
-        t.addCell(" 0. Back ");
+        CellStyle centerStyle = new CellStyle(HorizontalAlign.CENTER);
+        t.addCell(" 1. Volunteer ", centerStyle);
+        t.addCell(" 2. Salaried Employee ", centerStyle);
+        t.addCell(" 3. Hourly Employee ", centerStyle);
+        t.addCell(" 0. Back ", centerStyle);
         System.out.println(t.render());
     }
 
@@ -63,31 +76,44 @@ public class StaffView {
         }
 
         Table t = new Table(9, BorderStyle.UNICODE_BOX);
-        t.addCell(" Type "); t.addCell(" ID "); t.addCell(" Name "); t.addCell(" Address ");
-        t.addCell(" Salary "); t.addCell(" Bonus "); t.addCell(" Hours "); t.addCell(" Rate "); t.addCell(" Pay ");
+        CellStyle centerStyle = new CellStyle(HorizontalAlign.CENTER);
+        
+        t.addCell(" Type ", centerStyle); 
+        t.addCell(" ID ", centerStyle); 
+        t.addCell(" Name ", centerStyle); 
+        t.addCell(" Address ", centerStyle);
+        t.addCell(" Salary ", centerStyle); 
+        t.addCell(" Bonus ", centerStyle); 
+        t.addCell(" Hours ", centerStyle); 
+        t.addCell(" Rate ", centerStyle); 
+        t.addCell(" Pay ", centerStyle);
 
         list.forEach(s -> {
-            t.addCell(" " + s.getType() + " ");
-            t.addCell(" " + s.getId() + " ");
-            t.addCell(" " + s.getName() + " ");
-            t.addCell(" " + s.getAddress() + " ");
+            t.addCell(" " + s.getType() + " ", centerStyle);
+            t.addCell(" " + s.getId() + " ", centerStyle);
+            t.addCell(" " + s.getName() + " ", centerStyle);
+            t.addCell(" " + s.getAddress() + " ", centerStyle);
 
             if (s instanceof Volunteer) {
                 Volunteer v = (Volunteer) s;
-                t.addCell(" " + String.format("%.1f", v.getSalary()) + " ");
-                t.addCell(" ---- "); t.addCell(" ---- "); t.addCell(" ---- ");
+                t.addCell(" " + String.format("%.1f", v.getSalary()) + " ", centerStyle);
+                t.addCell(" --- ", centerStyle); 
+                t.addCell(" --- ", centerStyle); 
+                t.addCell(" --- ", centerStyle);
             } else if (s instanceof SalariedEmployee) {
                 SalariedEmployee se = (SalariedEmployee) s;
-                t.addCell(" " + String.format("%.1f", se.getSalary()) + " ");
-                t.addCell(" " + String.format("%.1f", se.getBonus()) + " ");
-                t.addCell(" ---- "); t.addCell(" ---- ");
+                t.addCell(" " + String.format("%.1f", se.getSalary()) + " ", centerStyle);
+                t.addCell(" " + String.format("%.1f", se.getBonus()) + " ", centerStyle);
+                t.addCell(" --- ", centerStyle); 
+                t.addCell(" --- ", centerStyle);
             } else {
                 HourlySalaryEmployee he = (HourlySalaryEmployee) s;
-                t.addCell(" ---- "); t.addCell(" ---- ");
-                t.addCell(" " + he.getHourWorked() + " ");
-                t.addCell(" " + String.format("%.1f", he.getRate()) + " ");
+                t.addCell(" --- ", centerStyle); 
+                t.addCell(" --- ", centerStyle);
+                t.addCell(" " + he.getHourWorked() + " ", centerStyle);
+                t.addCell(" " + String.format("%.1f", he.getRate()) + " ", centerStyle);
             }
-            t.addCell(" " + String.format("%.1f", s.pay()) + " ");
+            t.addCell(" " + String.format("%.1f", s.pay()) + " ", centerStyle);
         });
 
         System.out.println(t.render());
@@ -95,26 +121,27 @@ public class StaffView {
 
     public void printUpdateTable(StaffMember s) {
         Table t;
+        CellStyle centerStyle = new CellStyle(HorizontalAlign.CENTER);
         if (s instanceof Volunteer) {
             Volunteer v = (Volunteer) s;
-            t = new Table(5, BorderStyle.CLASSIC);
-            t.addCell(" Type "); t.addCell(" ID "); t.addCell(" Name "); t.addCell(" Address "); t.addCell(" Salary ");
-            t.addCell(" " + v.getType() + " "); t.addCell(" " + v.getId() + " "); t.addCell(" " + v.getName() + " ");
-            t.addCell(" " + v.getAddress() + " "); t.addCell(" " + String.format("%.1f", v.getSalary()) + " ");
+            t = new Table(5, BorderStyle.UNICODE_BOX);
+            t.addCell(" Type ", centerStyle); t.addCell(" ID ", centerStyle); t.addCell(" Name ", centerStyle); t.addCell(" Address ", centerStyle); t.addCell(" Salary ", centerStyle);
+            t.addCell(" " + v.getType() + " ", centerStyle); t.addCell(" " + v.getId() + " ", centerStyle); t.addCell(" " + v.getName() + " ", centerStyle);
+            t.addCell(" " + v.getAddress() + " ", centerStyle); t.addCell(" " + String.format("%.1f", v.getSalary()) + " ", centerStyle);
         } else if (s instanceof SalariedEmployee) {
             SalariedEmployee se = (SalariedEmployee) s;
-            t = new Table(6, BorderStyle.CLASSIC);
-            t.addCell(" Type "); t.addCell(" ID "); t.addCell(" Name "); t.addCell(" Address "); t.addCell(" Salary "); t.addCell(" Bonus ");
-            t.addCell(" " + se.getType() + " "); t.addCell(" " + se.getId() + " "); t.addCell(" " + se.getName() + " ");
-            t.addCell(" " + se.getAddress() + " "); t.addCell(" " + String.format("%.1f", se.getSalary()) + " ");
-            t.addCell(" " + String.format("%.1f", se.getBonus()) + " ");
+            t = new Table(6, BorderStyle.UNICODE_BOX);
+            t.addCell(" Type ", centerStyle); t.addCell(" ID ", centerStyle); t.addCell(" Name ", centerStyle); t.addCell(" Address ", centerStyle); t.addCell(" Salary ", centerStyle); t.addCell(" Bonus ", centerStyle);
+            t.addCell(" " + se.getType() + " ", centerStyle); t.addCell(" " + se.getId() + " ", centerStyle); t.addCell(" " + se.getName() + " ", centerStyle);
+            t.addCell(" " + se.getAddress() + " ", centerStyle); t.addCell(" " + String.format("%.1f", se.getSalary()) + " ", centerStyle);
+            t.addCell(" " + String.format("%.1f", se.getBonus()) + " ", centerStyle);
         } else {
             HourlySalaryEmployee he = (HourlySalaryEmployee) s;
-            t = new Table(6, BorderStyle.CLASSIC);
-            t.addCell(" Type "); t.addCell(" ID "); t.addCell(" Name "); t.addCell(" Address "); t.addCell(" Hours "); t.addCell(" Rate ");
-            t.addCell(" " + he.getType() + " "); t.addCell(" " + he.getId() + " "); t.addCell(" " + he.getName() + " ");
-            t.addCell(" " + he.getAddress() + " "); t.addCell(" " + he.getHourWorked() + " ");
-            t.addCell(" " + String.format("%.1f", he.getRate()) + " ");
+            t = new Table(6, BorderStyle.UNICODE_BOX);
+            t.addCell(" Type ", centerStyle); t.addCell(" ID ", centerStyle); t.addCell(" Name ", centerStyle); t.addCell(" Address ", centerStyle); t.addCell(" Hours ", centerStyle); t.addCell(" Rate ", centerStyle);
+            t.addCell(" " + he.getType() + " ", centerStyle); t.addCell(" " + he.getId() + " ", centerStyle); t.addCell(" " + he.getName() + " ", centerStyle);
+            t.addCell(" " + he.getAddress() + " ", centerStyle); t.addCell(" " + he.getHourWorked() + " ", centerStyle);
+            t.addCell(" " + String.format("%.1f", he.getRate()) + " ", centerStyle);
         }
         System.out.println(t.render());
     }
