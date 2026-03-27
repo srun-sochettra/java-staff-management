@@ -11,9 +11,18 @@ import java.util.List;
 
 public class StaffDAO {
 
-    // ── INSERT ────────────────────────────────────────────────────────────────
+    public int getNextId() throws SQLException {
+        Connection conn = DatabaseHelper.getConnection();
+        Statement  stmt = conn.createStatement();
+        ResultSet  rs   = stmt.executeQuery("SELECT nextval('staff_members_id_seq')");
+        rs.next();
+        int nextId = rs.getInt(1);
+        rs.close();
+        stmt.close();
+        return nextId;
+    }
 
-    public void insertStaff(StaffMember staff) throws SQLException {
+    public void insertStaff(int id, StaffMember staff) throws SQLException {
         Connection        conn  = DatabaseHelper.getConnection();
         PreparedStatement pstmt;
 
@@ -21,7 +30,7 @@ public class StaffDAO {
             Volunteer v = (Volunteer) staff;
             pstmt = conn.prepareStatement(
                     "INSERT INTO staff_members (id, type, name, address, salary) VALUES (?,?,?,?,?)");
-            pstmt.setInt   (1, v.getId());
+            pstmt.setInt   (1, id);
             pstmt.setString(2, "Volunteer");
             pstmt.setString(3, v.getName());
             pstmt.setString(4, v.getAddress());
@@ -31,7 +40,7 @@ public class StaffDAO {
             SalariedEmployee se = (SalariedEmployee) staff;
             pstmt = conn.prepareStatement(
                     "INSERT INTO staff_members (id, type, name, address, salary, bonus) VALUES (?,?,?,?,?,?)");
-            pstmt.setInt   (1, se.getId());
+            pstmt.setInt   (1, id);
             pstmt.setString(2, "SalariedEmployee");
             pstmt.setString(3, se.getName());
             pstmt.setString(4, se.getAddress());
@@ -42,7 +51,7 @@ public class StaffDAO {
             HourlySalaryEmployee he = (HourlySalaryEmployee) staff;
             pstmt = conn.prepareStatement(
                     "INSERT INTO staff_members (id, type, name, address, hour_worked, rate) VALUES (?,?,?,?,?,?)");
-            pstmt.setInt   (1, he.getId());
+            pstmt.setInt   (1, id);
             pstmt.setString(2, "HourlySalaryEmployee");
             pstmt.setString(3, he.getName());
             pstmt.setString(4, he.getAddress());
@@ -54,77 +63,75 @@ public class StaffDAO {
         pstmt.close();
     }
 
-    // ── SELECT ALL ────────────────────────────────────────────────────────────
-
     public List<StaffMember> getAllStaff() throws SQLException {
         List<StaffMember> list = new ArrayList<>();
         String sql = "SELECT * FROM staff_members ORDER BY id";
 
-        try (Connection conn = DatabaseHelper.getConnection();
-             Statement  stmt = conn.createStatement();
-             ResultSet  rs   = stmt.executeQuery(sql)) {
+        Connection conn = DatabaseHelper.getConnection();
+        Statement  stmt = conn.createStatement();
+        ResultSet  rs   = stmt.executeQuery(sql);
 
-            while (rs.next()) {
-                StaffMember s = mapRow(rs);
-                if (s != null) list.add(s);
-            }
+        while (rs.next()) {
+            StaffMember s = mapRow(rs);
+            if (s != null) list.add(s);
         }
+
+        rs.close();
+        stmt.close();
         return list;
     }
 
-    // ── SELECT BY ID ──────────────────────────────────────────────────────────
-
     public StaffMember getById(int id) throws SQLException {
         String sql = "SELECT * FROM staff_members WHERE id = ?";
-        try (Connection        conn = DatabaseHelper.getConnection();
-             PreparedStatement ps   = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
+        Connection        conn = DatabaseHelper.getConnection();
+        PreparedStatement ps   = conn.prepareStatement(sql);
+        ps.setInt(1, id);
+        ResultSet rs = ps.executeQuery();
+        StaffMember result = null;
+        if (rs.next()) {
+            result = mapRow(rs);
         }
-        return null;
+        rs.close();
+        ps.close();
+        return result;
     }
-
-    // ── EXISTS BY ID ─────────────────────────────────────────────────────────
 
     public boolean existsById(int id) throws SQLException {
         String sql = "SELECT 1 FROM staff_members WHERE id = ?";
-        try (Connection        conn = DatabaseHelper.getConnection();
-             PreparedStatement ps   = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
-        }
+        Connection        conn = DatabaseHelper.getConnection();
+        PreparedStatement ps   = conn.prepareStatement(sql);
+        ps.setInt(1, id);
+        ResultSet rs = ps.executeQuery();
+        boolean exists = rs.next();
+        rs.close();
+        ps.close();
+        return exists;
     }
-
-    // ── UPDATE FIELD ─────────────────────────────────────────────────────────
 
     public boolean updateField(int id, String column, Object value) throws SQLException {
         String sql = "UPDATE staff_members SET " + column + " = ? WHERE id = ?";
-        try (Connection        conn = DatabaseHelper.getConnection();
-             PreparedStatement ps   = conn.prepareStatement(sql)) {
+        Connection        conn = DatabaseHelper.getConnection();
+        PreparedStatement ps   = conn.prepareStatement(sql);
 
-            if      (value instanceof Double)  ps.setDouble(1, (Double)  value);
-            else if (value instanceof Integer) ps.setInt   (1, (Integer) value);
-            else                               ps.setString(1, value.toString());
+        if      (value instanceof Double)  ps.setDouble(1, (Double)  value);
+        else if (value instanceof Integer) ps.setInt   (1, (Integer) value);
+        else                               ps.setString(1, value.toString());
 
-            ps.setInt(2, id);
-            return ps.executeUpdate() > 0;
-        }
+        ps.setInt(2, id);
+        int rows = ps.executeUpdate();
+        ps.close();
+        return rows > 0;
     }
-
-    // ── DELETE ────────────────────────────────────────────────────────────────
 
     public boolean removeById(int id) throws SQLException {
         String sql = "DELETE FROM staff_members WHERE id = ?";
-        try (Connection        conn = DatabaseHelper.getConnection();
-             PreparedStatement ps   = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        }
+        Connection        conn = DatabaseHelper.getConnection();
+        PreparedStatement ps   = conn.prepareStatement(sql);
+        ps.setInt(1, id);
+        int rows = ps.executeUpdate();
+        ps.close();
+        return rows > 0;
     }
-
-    // ── ROW MAPPER ───────────────────────────────────────────────────────────
 
     private StaffMember mapRow(ResultSet rs) throws SQLException {
         int    id      = rs.getInt   ("id");

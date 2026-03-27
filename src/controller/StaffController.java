@@ -19,8 +19,6 @@ public class StaffController {
         this.dao  = dao;
     }
 
-    // ─────────────────────────── MAIN LOOP ───────────────────────────────────
-
     public void run() {
         boolean running = true;
         while (running) {
@@ -36,110 +34,88 @@ public class StaffController {
                     running = false;
                     break;
                 default:
-                    view.showMessage("Invalid option. Try again.");
+                    view.showError("Invalid option. Try again.");
             }
         }
         DatabaseHelper.close();
     }
 
-    // ─────────────────────────── INSERT ──────────────────────────────────────
-
     private void handleInsert() {
-        boolean loop = true;
-        while (loop) {
-            view.printInsertTypeMenu();
-            int type = view.readInt("Enter Type Number : ");
-            switch (type) {
-                case 1: insertVolunteer();        break;
-                case 2: insertSalariedEmployee(); break;
-                case 3: insertHourlyEmployee();   break;
-                case 0: loop = false;             break;
-                default: view.showMessage("Invalid type!");
-            }
+        view.printInsertTypeMenu();
+        int type = view.readInt("Enter Type Number : ");
+        switch (type) {
+            case 1: insertVolunteer();        break;
+            case 2: insertSalariedEmployee(); break;
+            case 3: insertHourlyEmployee();   break;
+            case 0: break;
+            default: view.showError("Invalid type!");
         }
     }
 
     private void insertVolunteer() {
-        view.showMessage("Volunteer");
-        int    id      = view.readInt   ("ID : ");
-        if (idExists(id)) return;
-        String name    = view.readString("Name : ");
-        String address = view.readString("Address : ");
-        double salary  = view.readDouble("Salary : ");
-
-        Volunteer v = new Volunteer(id, name, address, salary);
-        view.showPayment(v.pay());
         try {
-            dao.insertStaff(v);
-            view.showMessage("Insert Volunteer Employee is successfully.");
+            view.showMessage("Volunteer");
+            int id = dao.getNextId();
+            view.showMessage("ID : " + id);
+            String name    = view.readString("Name : ");
+            String address = view.readString("Address : ");
+            double salary  = view.readDouble("Salary : ");
+
+            Volunteer v = new Volunteer(id, name, address, salary);
+            view.showPayment(v.pay());
+            dao.insertStaff(id, v);
+            view.showSuccess("Insert Volunteer Employee is successfully.");
         } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
+            view.showError("DB Error: " + e.getMessage());
         }
     }
 
     private void insertSalariedEmployee() {
-        view.showMessage("SalariedEmployee");
-        int    id      = view.readInt   ("ID: ");
-        if (idExists(id)) return;
-        String name    = view.readString("Name : ");
-        String address = view.readString("Address : ");
-        double salary  = view.readDouble("Salary : ");
-        double bonus   = view.readDouble("Bonus : ");
-
-        SalariedEmployee se = new SalariedEmployee(id, name, address, salary, bonus);
-        view.showPayment(se.pay());
         try {
-            dao.insertStaff(se);
-            view.showMessage("Insert Salaried Employee is successfully.");
+            view.showMessage("SalariedEmployee");
+            int id = dao.getNextId();
+            view.showMessage("ID : " + id);
+            String name    = view.readString("Name : ");
+            String address = view.readString("Address : ");
+            double salary  = view.readDouble("Salary : ");
+            double bonus   = view.readDouble("Bonus : ");
+
+            SalariedEmployee se = new SalariedEmployee(id, name, address, salary, bonus);
+            view.showPayment(se.pay());
+            dao.insertStaff(id, se);
+            view.showSuccess("Insert Salaried Employee is successfully.");
         } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
+            view.showError("DB Error: " + e.getMessage());
         }
     }
 
     private void insertHourlyEmployee() {
-        view.showMessage("HourlySalaryEmployee");
-        int    id      = view.readInt   ("ID: ");
-        if (idExists(id)) return;
-        String name    = view.readString("Name : ");
-        String address = view.readString("Address : ");
-        int    hours   = view.readInt   ("Hour : ");
-        double rate    = view.readDouble("Rate : ");
-
-        HourlySalaryEmployee he = new HourlySalaryEmployee(id, name, address, hours, rate);
-        view.showPayment(he.pay());
         try {
-            dao.insertStaff(he);
-            view.showMessage("Insert Hourly Employee is successfully.");
+            view.showMessage("HourlySalaryEmployee");
+            int id = dao.getNextId();
+            view.showMessage("ID : " + id);
+            String name    = view.readString("Name : ");
+            String address = view.readString("Address : ");
+            int    hours   = view.readInt   ("Hour : ");
+            double rate    = view.readDouble("Rate : ");
+
+            HourlySalaryEmployee he = new HourlySalaryEmployee(id, name, address, hours, rate);
+            view.showPayment(he.pay());
+            dao.insertStaff(id, he);
+            view.showSuccess("Insert Hourly Employee is successfully.");
         } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
+            view.showError("DB Error: " + e.getMessage());
         }
     }
-
-    private boolean idExists(int id) {
-        try {
-            if (dao.existsById(id)) {
-                view.showMessage("Error: ID " + id + " already exists.");
-                return true;
-            }
-        } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
-            return true;
-        }
-        return false;
-    }
-
-    // ─────────────────────────── DISPLAY ─────────────────────────────────────
 
     private void handleDisplay() {
         try {
             List<StaffMember> list = dao.getAllStaff();
             view.printDisplayTable(list);
         } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
+            view.showError("DB Error: " + e.getMessage());
         }
     }
-
-    // ─────────────────────────── UPDATE ──────────────────────────────────────
 
     private void handleUpdate() {
         view.showMessage("=====*Update staff information *=====");
@@ -148,7 +124,7 @@ public class StaffController {
         try {
             StaffMember staff = dao.getById(id);
             if (staff == null) {
-                view.showMessage("Staff with ID " + id + " not found.");
+                view.showError("Staff with ID " + id + " not found.");
                 return;
             }
 
@@ -159,7 +135,7 @@ public class StaffController {
             processUpdate(id, col, staff);
 
         } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
+            view.showError("DB Error: " + e.getMessage());
         }
     }
 
@@ -170,8 +146,9 @@ public class StaffController {
                 case 2: dao.updateField(id, "address", view.readString("Address : ")); break;
                 case 3: dao.updateField(id, "salary",  view.readDouble("Salary : "));  break;
                 case 0: break;
-                default: view.showMessage("Invalid column.");
+                default: view.showError("Invalid column."); return;
             }
+            view.showSuccess("Update successfully.");
         } else if (staff instanceof SalariedEmployee) {
             switch (col) {
                 case 1: dao.updateField(id, "name",    view.readString("Name : "));    break;
@@ -179,8 +156,9 @@ public class StaffController {
                 case 3: dao.updateField(id, "salary",  view.readDouble("Salary : "));  break;
                 case 4: dao.updateField(id, "bonus",   view.readDouble("Bonus : "));   break;
                 case 0: break;
-                default: view.showMessage("Invalid column.");
+                default: view.showError("Invalid column."); return;
             }
+            view.showSuccess("Update successfully.");
         } else {
             switch (col) {
                 case 1: dao.updateField(id, "name",        view.readString("Name : "));    break;
@@ -188,24 +166,23 @@ public class StaffController {
                 case 3: dao.updateField(id, "rate",        view.readDouble("Rate : "));    break;
                 case 4: dao.updateField(id, "hour_worked", view.readInt   ("Hour : "));    break;
                 case 0: break;
-                default: view.showMessage("Invalid column.");
+                default: view.showError("Invalid column."); return;
             }
+            view.showSuccess("Update successfully.");
         }
     }
-
-    // ─────────────────────────── REMOVE ──────────────────────────────────────
 
     private void handleRemove() {
         view.showMessage("Remove Staff");
         int id = view.readInt("Enter Staff ID to remove: ");
         try {
             if (dao.removeById(id)) {
-                view.showMessage("Staff with ID " + id + " removed successfully.");
+                view.showSuccess("Staff with ID " + id + " removed successfully.");
             } else {
-                view.showMessage("Staff with ID " + id + " not found.");
+                view.showError("Staff with ID " + id + " not found.");
             }
         } catch (SQLException e) {
-            view.showMessage("DB Error: " + e.getMessage());
+            view.showError("DB Error: " + e.getMessage());
         }
     }
 }
