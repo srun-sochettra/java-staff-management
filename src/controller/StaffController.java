@@ -140,35 +140,39 @@ public class StaffController {
     }
 
     private void processUpdate(int id, int col, StaffMember staff) throws SQLException {
+        boolean updated = false;
         if (staff instanceof Volunteer) {
             switch (col) {
-                case 1: dao.updateField(id, "name",    view.readString("Name : "));    break;
-                case 2: dao.updateField(id, "address", view.readString("Address : ")); break;
-                case 3: dao.updateField(id, "salary",  view.readDouble("Salary : "));  break;
-                case 0: break;
+                case 1: updated = dao.updateField(id, "name",    view.readString("Name : "));    break;
+                case 2: updated = dao.updateField(id, "address", view.readString("Address : ")); break;
+                case 3: updated = dao.updateField(id, "salary",  view.readDouble("Salary : "));  break;
+                case 0: return;
                 default: view.showError("Invalid column."); return;
             }
-            view.showSuccess("Update successfully.");
         } else if (staff instanceof SalariedEmployee) {
             switch (col) {
-                case 1: dao.updateField(id, "name",    view.readString("Name : "));    break;
-                case 2: dao.updateField(id, "address", view.readString("Address : ")); break;
-                case 3: dao.updateField(id, "salary",  view.readDouble("Salary : "));  break;
-                case 4: dao.updateField(id, "bonus",   view.readDouble("Bonus : "));   break;
-                case 0: break;
+                case 1: updated = dao.updateField(id, "name",    view.readString("Name : "));    break;
+                case 2: updated = dao.updateField(id, "address", view.readString("Address : ")); break;
+                case 3: updated = dao.updateField(id, "salary",  view.readDouble("Salary : "));  break;
+                case 4: updated = dao.updateField(id, "bonus",   view.readDouble("Bonus : "));   break;
+                case 0: return;
                 default: view.showError("Invalid column."); return;
             }
-            view.showSuccess("Update successfully.");
         } else {
             switch (col) {
-                case 1: dao.updateField(id, "name",        view.readString("Name : "));    break;
-                case 2: dao.updateField(id, "address",     view.readString("Address : ")); break;
-                case 3: dao.updateField(id, "rate",        view.readDouble("Rate : "));    break;
-                case 4: dao.updateField(id, "hour_worked", view.readInt   ("Hour : "));    break;
-                case 0: break;
+                case 1: updated = dao.updateField(id, "name",        view.readString("Name : "));    break;
+                case 2: updated = dao.updateField(id, "address",     view.readString("Address : ")); break;
+                case 3: updated = dao.updateField(id, "rate",        view.readDouble("Rate : "));    break;
+                case 4: updated = dao.updateField(id, "hour_worked", view.readInt   ("Hour : "));    break;
+                case 0: return;
                 default: view.showError("Invalid column."); return;
             }
+        }
+
+        if (updated) {
             view.showSuccess("Update successfully.");
+        } else {
+            view.showError("Update failed or no changes made.");
         }
     }
 
