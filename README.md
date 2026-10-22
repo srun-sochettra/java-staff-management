@@ -1,101 +1,96 @@
-# 👥 Staff Member Management System
+# Java Staff Management
 
-A Java console application for managing staff records using PostgreSQL. It features an MVC architecture, dynamic collections, pagination, and polymorphic employee types. Created for Homework 03.
+**A console CRUD project exploring inheritance, MVC and PostgreSQL persistence.**
 
----
+Created for Homework 03, this application stores staff records, displays calculated pay and supports type-specific updates through a terminal menu. An abstract `StaffMember` model provides a shared interface for three staff types.
 
-## ✨ Features
+This is coursework, not a production HR or payroll system. It does not implement payroll processing, tax rules, authentication or employee performance assessment.
 
-- **CRUD operations** — Insert, Display, Update (except ID), and Remove staff members
-- **Polymorphism** — Supports multiple staff types (`Volunteer`, `SalariedEmployee`, `HourlySalaryEmployee`) extending a base `StaffMember` class
-- **Dynamic Collections** — Utilizes Java Collections framework for dynamic in-memory updates, removals, and displays
-- **Pagination** — Navigate large lists of staff members efficiently
-- **Modern Java Integration** — Incorporates Java 8-11 features and Stream API for data manipulation
-- **Auto-Initialization** — Automatically creates the required PostgreSQL database table and sequences on startup
+## Features
 
----
+- Insert volunteers, salaried employees and hourly employees.
+- Display stored records in ID order with formatted terminal tables.
+- Update the fields applicable to a staff type without editing its ID.
+- Remove a record by ID.
+- Persist records through JDBC to PostgreSQL.
+- Attempt table and sequence initialisation on startup.
 
-## 🗂️ Project Structure
+The display loads all rows into a list and renders one table. **Pagination is not implemented**, despite the previous README's claim.
+
+## Polymorphic pay examples
+
+| Model | Implemented `pay()` calculation |
+| --- | --- |
+| `Volunteer` | Stored salary value |
+| `SalariedEmployee` | Salary plus bonus |
+| `HourlySalaryEmployee` | Hours worked multiplied by rate |
+
+These are the actual coursework formulas, including the salary field on Volunteer. Values use `double` and are displayed to one decimal place; this is not an exact-money or statutory payroll implementation.
+
+## Setup boundaries
+
+The inventory lists PostgreSQL JDBC 42.7.10 and text-table-formatter 1.1.2 JARs under `lib/`. Their binary contents are excluded from the text export and were not tested. Use the original checkout and confirm the files exist.
+
+The IntelliJ module inherits its JDK. No build-tool configuration or verified minimum JDK is supplied; the old Java 8+ claim has not been established for the complete dependency set. Select a compatible JDK and verify locally.
+
+### Database
+
+`src/controller/DatabaseHelper.java` targets a local PostgreSQL database named `staff_db` and contains hard-coded credentials. **Rotate the password if it has been used anywhere real.** Its value is deliberately not copied here. This documentation does not change the connection code or remove historical copies.
+
+Prepare an isolated development database separately and review the helper's connection settings before running. The application attempts to create `staff_members` and adjust its ID sequence; it does not create the database itself. The account needs permissions for those operations.
+
+**Fresh-database startup needs verification:** the sequence-reset statement passes zero when the table is empty. Do not assume automatic initialisation succeeds. Inspect this path before relying on a clean installation; no database test or fix was performed here.
+
+There is no environment-variable loader in the current helper. Creating an `.env` file alone will not configure it.
+
+### Suggested Windows PowerShell commands
+
+From the repository root, after reviewing database configuration and JAR availability:
+
+```powershell
+javac -encoding UTF-8 -cp "lib/*" -d out src/Main.java src/controller/*.java src/model/*.java src/view/*.java
+java -cp "out;lib/*" Main
+```
+
+For a POSIX shell, use `"out:lib/*"` as the runtime classpath instead. These are proposed commands, not commands executed during this refresh. Compile from source rather than relying on the `.class` files listed alongside it.
+
+## Menu
+
+| Option | Action |
+| --- | --- |
+| `1` | Insert a staff record; select its type |
+| `2` | Display all staff |
+| `3` | Update an existing record's permitted fields |
+| `4` | Remove a record |
+| `5` | Exit and close the shared connection |
+
+Updates offer name/address and the relevant salary, bonus, rate or hours fields. Changing record type is not offered. Removal has no confirmation or undo.
+
+## Architecture
 
 ```text
-src/
-├── Main.java                    # Entry point & MVC wiring
-├── controller/
-│   ├── DatabaseHelper.java      # PostgreSQL connection & table initialization
-│   ├── StaffController.java     # Main application logic & menu routing
-│   └── StaffDAO.java            # Data Access Object implementation
-├── model/
-│   ├── StaffMember.java         # Abstract base class with pay() method
-│   ├── Volunteer.java           # Inherits StaffMember
-│   ├── SalariedEmployee.java    # Inherits StaffMember
-│   └── HourlySalaryEmployee.java# Inherits StaffMember
-└── view/
-    └── StaffView.java           # Console interface and user input handling
+src/Main.java                 Startup and MVC wiring
+src/model/                    Abstract staff model and concrete types
+src/controller/DatabaseHelper.java  Shared JDBC connection and schema setup
+src/controller/StaffDAO.java        Queries and row-to-model mapping
+src/controller/StaffController.java Menu routing and operations
+src/view/StaffView.java             Console input and table output
 ```
 
----
+## Known limitations
 
-## 🛠️ Prerequisites
+- Numeric parsing retries malformed input, but does not enforce positive amounts/hours or finite decimal values. Text input can be empty.
+- Database string lengths can reject values the console accepts.
+- DAO values are parameter-bound, but the update column is concatenated. Current controller calls supply fixed column names; the DAO does not independently enforce an allowlist.
+- Sequence allocation occurs before record input/insertion, so IDs need not be contiguous.
+- Startup changes the sequence on each run; concurrent instances and existing data need separate review.
+- JDBC resources are closed manually; exceptions can bypass some cleanup. Raw SQL error messages are displayed.
+- No automated test suite, migration framework, backup or recovery workflow is supplied.
 
-| Tool | Version |
-|------|---------|
-| Java | 8 or higher |
-| PostgreSQL | Local server running on port 5432 |
+See [implementation notes](docs/implementation-notes.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
----
+## Verification and licence
 
-## ⚙️ Setup
+This refresh inspected source and documentation only. No Java compilation, database initialisation, CRUD operation or behavioural test was executed.
 
-### 1. Configure your DB credentials
-
-Edit `src/controller/DatabaseHelper.java` to match your local PostgreSQL instance:
-
-```java
-private static final String URL      = "jdbc:postgresql://localhost:5432/staff_db";
-private static final String USER     = "postgres";
-private static final String PASSWORD = "12345";
-```
-
-*Note: Ensure the database `staff_db` exists. The application will automatically create the `staff_members` table.*
-
-### 2. Build and run
-
-Compile the Java files and run `Main.java`, ensuring the `lib` folder is included in your classpath:
-
-```bash
-# Compile
-javac -cp "lib/*" -d out src/**/*.java src/*.java
-
-# Run
-java -cp "out:lib/*" Main
-```
-
----
-
-## 🗄️ Database Schema
-
-The table is automatically generated by `DatabaseHelper.java` upon the first execution using the following schema:
-
-```sql
-CREATE TABLE IF NOT EXISTS staff_members (
-    id          SERIAL PRIMARY KEY,
-    type        VARCHAR(30)  NOT NULL,
-    name        VARCHAR(100) NOT NULL,
-    address     VARCHAR(200) NOT NULL,
-    salary      DOUBLE PRECISION,
-    bonus       DOUBLE PRECISION,
-    hour_worked INTEGER,
-    rate        DOUBLE PRECISION
-);
-```
-
----
-
-## 📦 Dependencies
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| PostgreSQL JDBC | 42.7.10 | Database driver (bundled in `lib/`) |
-| Text Table Formatter | 1.1.2 | Console table rendering (bundled in `lib/`) |
-
-No internet connection is required to build — the required `.jar` files are included locally.
+No project licence file is included in the export. This refresh assigns no licence and does not establish redistribution rights for the assignment PDF or bundled JARs.
